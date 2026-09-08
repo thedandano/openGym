@@ -9,6 +9,7 @@ import { MOBILE, initReminderSync, nativeLoad, nativeSave, onAppActive, syncRemi
 import { mergeStates, localExtras } from '../lib/sync-merge.js'
 import { loadRemote, chooseLocal, forgetRemote, connect } from '../lib/remote.js'
 import { loadCoachDevice, saveCoachDevice, coachDeviceSettings } from '../lib/coach-device.js'
+import { healthWeightEntry, readHealthWeight, saveDailyWeight } from '../lib/healthkit.js'
 
 import { WC_DEFAULT } from '../lib/workout-controls.js'
 
@@ -125,6 +126,8 @@ export const useStore = create((set, get) => {
     if (next.offline !== cur.offline || next.pending !== cur.pending || next.lastSynced !== cur.lastSynced) set({ sync: next })
   }
   const isNetworkError = e => e && e.status == null   // fetch itself failed: no response at all
+  let healthRead = null
+  let healthSession = 0
 
   initReminderSync(() => get().S)
 
@@ -313,6 +316,37 @@ export const useStore = create((set, get) => {
     ready: false,
     // Server sync as the banner sees it (components/SyncBanner.jsx). Only meaningful signed in.
     sync: { offline: false, pending: localStorage.getItem('gym_dirty') === '1', lastSynced: 0 },
+    healthWeightStatus: 'pending',
+    async syncHealthWeight() {
+      // ponytail: pair first; local imports need provenance before snapshot pairing can preserve both profiles.
+      if (!get().ready || !get().user) return
+      if (healthRead) return healthRead
+      const session = healthSession
+      set({ healthWeightStatus: 'pending' })
+      const request = (async () => {
+        try {
+          const sample = await readHealthWeight()
+          if (session !== healthSession) return
+          if (sample.status === 'unsupported' || sample.status === 'no-readable-data') {
+            console.warn(`Apple Health: ${sample.status}; using manual weigh-in`)
+            set({ healthWeightStatus: sample.status })
+            return
+          }
+          if (sample.status !== 'available') throw new Error('Apple Health returned an unknown result')
+          const entry = healthWeightEntry(sample, get().S.unit)
+          const existing = get().S.bodyweight.find(b => b.d === entry.d)
+          if (!existing || entry.t > (existing.t || 0)) get().update(s => saveDailyWeight(s, entry))
+          set({ healthWeightStatus: 'available' })
+        } catch (error) {
+          // The native bridge and local persistence can both fail; neither may block a workout.
+          console.warn('Apple Health sync failed; using manual weigh-in', error)
+          if (session === healthSession) set({ healthWeightStatus: 'failed' })
+        }
+      })()
+      healthRead = request
+      await request
+      if (healthRead === request) healthRead = null
+    },
     /* Instance capabilities from GET /api/config. `config.coach` is present only when the owner
        has both enabled the Coach and connected a provider — every Coach entry point in the app
        hangs off it via coachAvailable(), so an unconfigured instance renders exactly what it
@@ -345,7 +379,11 @@ export const useStore = create((set, get) => {
     },
 
     isGuest: () => localStorage.getItem('gym_guest') === '1',
-    setGuest(v) { if (v) localStorage.setItem('gym_guest', '1'); else localStorage.removeItem('gym_guest'); set({}) },
+    setGuest(v) {
+      healthSession++; healthRead = null
+      if (v) localStorage.setItem('gym_guest', '1'); else localStorage.removeItem('gym_guest')
+      set({ healthWeightStatus: 'pending' })
+    },
 
     // Public config from /api/config (invite_only, allow_guest). null until the first successful
     // fetch — the login screen and boot both read it, so it is fetched once and cached here
@@ -363,6 +401,7 @@ export const useStore = create((set, get) => {
     },
 
     setUser(u) {
+      healthSession++; healthRead = null
       if (u) {
         // The local copy belongs to whoever last signed in here. When a session expires or is
         // revoked elsewhere, boot() only drops the user and the data stays; a different profile
@@ -379,7 +418,7 @@ export const useStore = create((set, get) => {
         localStorage.setItem('gym_owner', u.id)
         localStorage.setItem('gym_user', JSON.stringify(u)); localStorage.removeItem('gym_guest')
       } else localStorage.removeItem('gym_user')
-      set({ user: u })
+      set({ user: u, healthWeightStatus: 'pending' })
     },
 
     // One PUT at a time: a push asked for while one is in flight runs after it (once, however
@@ -484,8 +523,12 @@ export const useStore = create((set, get) => {
     },
 
     async signOut() {
-      try { await get().pushState(); await api('/api/logout', { method: 'POST', body: '{}' }) } catch (e) { /* */ }
+      healthSession++; healthRead = null
+      set({ ready: false, healthWeightStatus: 'pending' })
+      try { await get().pushState(); await api('/api/logout', { method: 'POST', body: '{}' }) }
+      catch (error) { console.warn('Server sign-out failed; clearing this device session', error) }
       clearLocalSession()
+      set({ ready: true })
     },
 
     // Mobile-only ("connect to my server" onboarding, see App.jsx's needsMobileOnboarding).
@@ -498,12 +541,16 @@ export const useStore = create((set, get) => {
     // Redeems the pairing code shown in the browser (Settings → "Pair the mobile app") and
     // switches this device over to that account, same as signing in on the web does.
     async connectToServer(url, code, ask) {
-      const user = await connect(url, code)   // throws on a bad URL/expired code — caller shows it
-      get().setUser(user)
-      await get().refreshConfig()   // what this server offers (the Coach, guest mode) — see boot()
-      await get().adoptProfile(ask)
-      syncReminder(get().S)
-      set({ needsMobileOnboarding: false })
+      healthSession++; healthRead = null
+      set({ ready: false, healthWeightStatus: 'pending' })
+      try {
+        const user = await connect(url, code)   // throws on a bad URL/expired code — caller shows it
+        get().setUser(user)
+        await get().refreshConfig()   // what this server offers (the Coach, guest mode) — see boot()
+        await get().adoptProfile(ask)
+        syncReminder(get().S)
+        set({ needsMobileOnboarding: false })
+      } finally { set({ ready: true }) }
     },
     // Leaves remote mode and drops cleanly back to local-only, without losing whatever was last
     // synced (signOut() already pushes before it clears).
@@ -520,9 +567,13 @@ export const useStore = create((set, get) => {
     // the sessions elsewhere are all still valid, and wiping this device's copy of the data
     // would sign the user out of the one place the bump didn't reach. Caller reports the error.
     async signOutAll() {
-      await get().pushState()   // never throws — stores gym_dirty and moves on when offline
-      await api('/api/logout/all', { method: 'POST', body: '{}' })
-      clearLocalSession()
+      healthSession++; healthRead = null
+      set({ ready: false, healthWeightStatus: 'pending' })
+      try {
+        await get().pushState()   // never throws — stores gym_dirty and moves on when offline
+        await api('/api/logout/all', { method: 'POST', body: '{}' })
+        clearLocalSession()
+      } finally { set({ ready: true }) }
     },
 
     // Demo build only: drop the seeded example profile back in (Settings → "Reset demo data").
@@ -553,7 +604,7 @@ export const useStore = create((set, get) => {
             await get().loadConfig()
             await get().pullState()
           } catch (e) {
-            if (e.status === 401) { await forgetRemote(); get().setGuest(true) }
+            if (e.status === 401) { await forgetRemote(); get().setUser(null); get().setGuest(true) }
             else { get().setUser(remote.user); setSync({ offline: true }) }   // offline — keep going from the last-synced local copy
           }
           syncReminder(get().S)

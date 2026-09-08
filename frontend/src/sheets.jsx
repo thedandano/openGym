@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useStore } from './store/useStore.js'
+import { isHealthKitPlatform, saveDailyWeight } from './lib/healthkit.js'
 import { useUI } from './store/useUI.js'
 import { EXDB, EXIDX, BODYPARTS, isCardio, isBodyweightEq, allExercises, equipmentOf, smOf, matchExercise, exOr } from './lib/exercises.js'
 import { activeProfile, exAvailable, ALL_EQUIPMENT, newProfile } from './lib/equipment.js'
@@ -190,7 +191,7 @@ function WeightInput({ value, setValue, unit }) {
 }
 
 /* ============================ body weight ============================ */
-function BwSheet({ required, onDone, close }) {
+function BwSheet({ required, onDone, close, fallbackReason }) {
   const st = useStore(s => s.S)
   const unit = st.unit
   const bw = lastBW(st)
@@ -198,12 +199,7 @@ function BwSheet({ required, onDone, close }) {
   const save = () => {
     const n = Math.round((v || 0) * 10) / 10
     if (!n || n <= 0) { toast(t('Enter a valid weight')); return }
-    update(s => {
-      const iso = todayISO()
-      const ex = s.bodyweight.find(b => b.d === iso)
-      if (ex) { ex.w = n; ex.t = Date.now() } else s.bodyweight.push({ d: iso, w: n, t: Date.now() })
-      s.bodyweight.sort((a, b) => (a.d < b.d ? -1 : 1))
-    })
+    update(s => saveDailyWeight(s, { d: todayISO(), w: n, t: Date.now() }))
     close()
     if (onDone) onDone(n); else toast(t('Weight saved'))
   }
@@ -223,6 +219,7 @@ function BwSheet({ required, onDone, close }) {
         </div>
       : <h3>{t('Log body weight')}</h3>}
     <div className="muted small">{required ? t('Slide or tap to set your weight — tracked before every workout so your curve stays honest.') : t('Today') + ', ' + fmtDate(todayISO(), true)}</div>
+    {fallbackReason && <p className="muted small" role="status">{t(fallbackReason)}</p>}
     <WeightInput value={v} setValue={setV} unit={unit} />
     <div style={{ height: 14 }} />
     <Button variant="primary" onClick={save}>{required ? t('Save & start workout') : t('Save')}</Button>
@@ -1759,7 +1756,23 @@ export function startFlow(routineIds) {
   // The weigh-in is a setting (Settings → During a workout, issue #137): off goes straight
   // into the session with no body weight on it, same as "Start without weighing in".
   if (S().weighIn === false) { beginWorkout(routineIds, null); return }
-  bwSheet({ required: true, onDone: bw => beginWorkout(routineIds, bw) })
+  const { S: state, healthWeightStatus, user } = useStore.getState()
+  const usesHealth = isHealthKitPlatform() && !!user
+  const latest = lastBW(state)
+  if (usesHealth && healthWeightStatus === 'available' && latest) {
+    beginWorkout(routineIds, latest.w)
+    return
+  }
+  const reasons = {
+    pending: 'Apple Health is still checking for a weight. Enter your weight to start.',
+    unsupported: 'Apple Health is unavailable on this device. Enter your weight to start.',
+    'no-readable-data': 'Apple Health has no readable weight. You can check Health access in Settings or enter your weight here.',
+    failed: 'Apple Health could not load your weight. Enter your weight to start.',
+    available: 'Your saved weight is missing. Enter your weight or reopen the app to check Apple Health.',
+  }
+  const fallbackReason = usesHealth ? reasons[healthWeightStatus] : null
+  if (fallbackReason) console.warn(`Apple Health: ${healthWeightStatus}; using manual weigh-in`)
+  bwSheet({ required: true, fallbackReason, onDone: bw => beginWorkout(routineIds, bw) })
 }
 export function beginWorkout(routineIds, bw) {
   const st = S()
