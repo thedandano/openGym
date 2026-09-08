@@ -17,6 +17,7 @@ import { coachRoutes } from './coach/routes.js';
 import { startCadence } from './coach/cadence.js';
 import { startWarmup } from './coach/warmup.js';
 import { dayReminderPush, restTimerPush, testPush } from './push-messages.js';
+import { atomicWrite, readAccountState, saveAccountState } from './state-store.js';
 import { verifyError } from './verify-error.js';
 
 const PORT = +(process.env.PORT || 3000);
@@ -71,15 +72,7 @@ const isAdmin = user => !!user && (user.admin === true || ADMIN_UIDS.includes(us
 // 0600: db.json holds passkey credential material. It used to be covered by a blanket 0700 on
 // the whole directory; now that the directory stays traversable, the file carries its own mode.
 function saveDb() { atomicWrite(dbFile, JSON.stringify(db, null, 2), 0o600); }
-function atomicWrite(file, content, mode) {
-  const tmp = file + '.tmp';
-  fs.writeFileSync(tmp, content, mode ? { mode } : undefined);
-  fs.renameSync(tmp, file);
-}
-const stateFile = uid => path.join(DATA, 'state-' + uid.replace(/[^a-zA-Z0-9_-]/g, '') + '.json');
-function readState(uid) {
-  try { return JSON.parse(fs.readFileSync(stateFile(uid), 'utf8')); } catch { return null; }
-}
+const readState = uid => readAccountState(uid).state;
 
 /* ---------- push notifications (Web Push / VAPID) ---------- */
 const vapidFile = path.join(DATA, 'vapid.json');
@@ -755,20 +748,38 @@ const routes = {
   'GET /api/data': async (req, res) => {
     const user = readSession(req);
     if (!user) return json(res, 401, { error: 'not signed in' });
-    try {
-      const state = JSON.parse(fs.readFileSync(stateFile(user.id), 'utf8'));
-      json(res, 200, { state });
-    } catch { json(res, 200, { state: null }); }
+    const account = readAccountState(user.id);
+    json(res, 200, {
+      state: account.state,
+      revision: account.revision,
+      requireRevision: account.state?._sync?.requireRevision === true,
+    });
   },
 
   'PUT /api/data': async (req, res) => {
     const user = readSession(req);
     if (!user) return json(res, 401, { error: 'not signed in' });
     const body = await readBody(req);
-    if (!body.state || typeof body.state !== 'object') return json(res, 400, { error: 'state required' });
-    delete body.state.active;              // in-progress workouts stay device-local
-    atomicWrite(stateFile(user.id), JSON.stringify(body.state));
-    json(res, 200, { ok: true, ts: body.state._ts || null });
+    if (!body.state || typeof body.state !== 'object' || Array.isArray(body.state)) {
+      return json(res, 400, { error: 'state required' });
+    }
+    try {
+      const saved = saveAccountState(user.id, body.state, body.baseRevision);
+      json(res, 200, {
+        ok: true,
+        ts: saved.state._ts || null,
+        revision: saved.revision,
+        state: saved.state,
+      });
+    } catch (error) {
+      if (error?.code === 'client_update_required') {
+        return json(res, 428, { error: error.code, revision: error.revision });
+      }
+      if (error?.code === 'state_conflict') {
+        return json(res, 409, { error: error.code, revision: error.revision });
+      }
+      throw error;
+    }
   },
 
   'GET /api/push/public-key': async (req, res) => json(res, 200, { key: vapid.publicKey }),
