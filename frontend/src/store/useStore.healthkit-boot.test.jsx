@@ -6,7 +6,7 @@ import { afterEach, expect, it, vi } from 'vitest'
 const { nativeRead } = vi.hoisted(() => ({ nativeRead: vi.fn() }))
 vi.mock('../lib/api.js', () => ({ api: vi.fn(), setRemoteAuth: vi.fn() }))
 vi.mock('../lib/remote.js', () => ({ loadRemote: vi.fn(), forgetRemote: vi.fn(), connect: vi.fn(), chooseLocal: vi.fn() }))
-vi.mock('../lib/mobile.js', () => ({ MOBILE: true, initReminderSync: vi.fn(), nativeLoad: vi.fn(), nativeSave: vi.fn(), syncReminder: vi.fn(), writeAutoBackup: vi.fn() }))
+vi.mock('../lib/mobile.js', () => ({ MOBILE: true, initReminderSync: vi.fn(), nativeLoad: vi.fn(), nativeSave: vi.fn(), onAppActive: vi.fn(), syncReminder: vi.fn(), writeAutoBackup: vi.fn() }))
 vi.mock('../lib/coach-device.js', () => ({ loadCoachDevice: vi.fn(), saveCoachDevice: vi.fn(), coachDeviceSettings: () => null }))
 vi.mock('@capacitor/core', () => ({ Capacitor: { getPlatform: () => 'ios' }, registerPlugin: () => ({ latestBodyMass: nativeRead }) }))
 
