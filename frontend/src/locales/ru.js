@@ -1954,4 +1954,10 @@ export default {
   'Greys show darker in light mode, so buttons don’t look switched off.': 'Серые оттенки в светлой теме темнее, чтобы кнопки не казались выключенными.',
   'custom color picker': 'свой цвет пользовательский палитра выбор цвета',
   'Signed in from another tab. Your workout came along, keep going here.': 'Вход выполнен в другой вкладке. Тренировка сохранилась, продолжай здесь.',
+  'Apple Health': 'Apple Health',
+  'Manual': 'Вручную',
+  'Apple Health is still checking for a weight. Enter your weight to start.': 'Apple Health всё ещё ищет вес. Введите свой вес, чтобы начать.',
+  'Apple Health is unavailable on this device. Enter your weight to start.': 'Apple Health недоступно на этом устройстве. Введите свой вес, чтобы начать.',
+  'Apple Health has no readable weight. You can check Health access in Settings or enter your weight here.': 'В Apple Health нет веса, который можно прочитать. Проверьте доступ к Health в Настройках или введите вес здесь.',
+  'Apple Health could not load your weight. Enter your weight to start.': 'Apple Health не удалось загрузить ваш вес. Введите свой вес, чтобы начать.',
 }

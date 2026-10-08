@@ -1950,4 +1950,10 @@ export default {
   'Greys show darker in light mode, so buttons don’t look switched off.': '라이트 모드에서는 버튼이 꺼진 것처럼 보이지 않게 회색을 어둡게 표시해요.',
   'custom color picker': '나만의 색상 사용자 지정 색상 선택기',
   'Signed in from another tab. Your workout came along, keep going here.': '다른 탭에서 로그인했어요. 운동도 함께 넘어왔으니 여기서 이어서 하세요.',
+  'Apple Health': 'Apple 건강',
+  'Manual': '직접 입력',
+  'Apple Health is still checking for a weight. Enter your weight to start.': 'Apple 건강에서 아직 체중을 확인하는 중입니다. 시작하려면 체중을 입력하세요.',
+  'Apple Health is unavailable on this device. Enter your weight to start.': '이 기기에서는 Apple 건강을 사용할 수 없습니다. 시작하려면 체중을 입력하세요.',
+  'Apple Health has no readable weight. You can check Health access in Settings or enter your weight here.': 'Apple 건강에 읽을 수 있는 체중이 없습니다. 설정에서 건강 접근 권한을 확인하거나 여기에 체중을 입력하세요.',
+  'Apple Health could not load your weight. Enter your weight to start.': 'Apple 건강에서 체중을 불러오지 못했습니다. 시작하려면 체중을 입력하세요.',
 }

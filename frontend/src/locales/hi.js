@@ -1950,4 +1950,10 @@ export default {
   'Greys show darker in light mode, so buttons don’t look switched off.': 'लाइट मोड में ग्रे रंग गहरे दिखते हैं, ताकि बटन बंद जैसे न लगें।',
   'custom color picker': 'अपना रंग कस्टम रंग चुनने वाला',
   'Signed in from another tab. Your workout came along, keep going here.': 'दूसरे टैब से साइन इन हुआ। आपका वर्कआउट साथ आ गया, यहीं जारी रखें।',
+  'Apple Health': 'Apple Health',
+  'Manual': 'मैन्युअल',
+  'Apple Health is still checking for a weight. Enter your weight to start.': 'Apple Health अभी वज़न खोज रहा है। शुरू करने के लिए अपना वज़न दर्ज करें।',
+  'Apple Health is unavailable on this device. Enter your weight to start.': 'इस डिवाइस पर Apple Health उपलब्ध नहीं है। शुरू करने के लिए अपना वज़न दर्ज करें।',
+  'Apple Health has no readable weight. You can check Health access in Settings or enter your weight here.': 'Apple Health में पढ़ने लायक कोई वज़न नहीं है। आप सेटिंग्स में Health की अनुमति जाँच सकते हैं या यहाँ अपना वज़न दर्ज कर सकते हैं।',
+  'Apple Health could not load your weight. Enter your weight to start.': 'Apple Health आपका वज़न लोड नहीं कर सका। शुरू करने के लिए अपना वज़न दर्ज करें।',
 }

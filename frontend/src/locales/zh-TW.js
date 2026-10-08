@@ -1943,4 +1943,10 @@ export default {
   'Greys show darker in light mode, so buttons don’t look switched off.': '淺色模式下灰色會調暗一些，免得按鈕看起來像被停用了。',
   'custom color picker': '自訂顏色 自己的顏色 取色器 調色盤',
   'Signed in from another tab. Your workout came along, keep going here.': '已在另一個分頁登入。你的訓練也一起帶過去了，在這裡繼續吧。',
+  'Apple Health': 'Apple 健康',
+  'Manual': '手動',
+  'Apple Health is still checking for a weight. Enter your weight to start.': 'Apple 健康仍在尋找體重。請輸入體重以開始。',
+  'Apple Health is unavailable on this device. Enter your weight to start.': '此裝置無法使用 Apple 健康。請輸入體重以開始。',
+  'Apple Health has no readable weight. You can check Health access in Settings or enter your weight here.': 'Apple 健康中沒有可讀取的體重。你可以在「設定」中檢查健康取用權限，或在此輸入體重。',
+  'Apple Health could not load your weight. Enter your weight to start.': 'Apple 健康無法載入你的體重。請輸入體重以開始。',
 }

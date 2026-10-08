@@ -1970,4 +1970,10 @@ export default {
   'Greys show darker in light mode, so buttons don’t look switched off.': 'Grautöne werden im hellen Modus dunkler, damit Buttons nicht ausgeschaltet wirken.',
   'custom color picker': 'eigene Farbe benutzerdefiniert Farbwähler Farbauswahl',
   'Signed in from another tab. Your workout came along, keep going here.': 'In einem anderen Tab angemeldet. Dein Training ist mitgekommen, mach hier weiter.',
+  'Apple Health': 'Apple Health',
+  'Manual': 'Manuell',
+  'Apple Health is still checking for a weight. Enter your weight to start.': 'Apple Health sucht noch nach einem Gewicht. Gib dein Gewicht ein, um zu starten.',
+  'Apple Health is unavailable on this device. Enter your weight to start.': 'Apple Health ist auf diesem Gerät nicht verfügbar. Gib dein Gewicht ein, um zu starten.',
+  'Apple Health has no readable weight. You can check Health access in Settings or enter your weight here.': 'Apple Health hat kein lesbares Gewicht. Du kannst den Health-Zugriff in den Einstellungen prüfen oder dein Gewicht hier eingeben.',
+  'Apple Health could not load your weight. Enter your weight to start.': 'Apple Health konnte dein Gewicht nicht laden. Gib dein Gewicht ein, um zu starten.',
 }

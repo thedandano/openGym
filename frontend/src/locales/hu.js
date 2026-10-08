@@ -1953,4 +1953,10 @@ export default {
   'Greys show darker in light mode, so buttons don’t look switched off.': 'A szürkék világos módban sötétebbek, hogy a gombok ne tűnjenek kikapcsoltnak.',
   'custom color picker': 'saját szín egyéni színválasztó',
   'Signed in from another tab. Your workout came along, keep going here.': 'Bejelentkeztél egy másik lapon. Az edzésed is jött vele, folytasd itt.',
+  'Apple Health': 'Apple Health',
+  'Manual': 'Kézi',
+  'Apple Health is still checking for a weight. Enter your weight to start.': 'Az Apple Health még keresi a testsúlyt. Add meg a súlyodat a kezdéshez.',
+  'Apple Health is unavailable on this device. Enter your weight to start.': 'Az Apple Health ezen az eszközön nem érhető el. Add meg a súlyodat a kezdéshez.',
+  'Apple Health has no readable weight. You can check Health access in Settings or enter your weight here.': 'Az Apple Healthben nincs olvasható testsúly. A Health-hozzáférést a Beállításokban ellenőrizheted, vagy itt megadhatod a súlyodat.',
+  'Apple Health could not load your weight. Enter your weight to start.': 'Az Apple Health nem tudta betölteni a súlyodat. Add meg a súlyodat a kezdéshez.',
 }

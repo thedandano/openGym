@@ -1950,4 +1950,10 @@ export default {
   'Greys show darker in light mode, so buttons don’t look switched off.': 'Griler aydınlık modda daha koyu görünür, düğmeler kapalıymış gibi durmasın diye.',
   'custom color picker': 'kendi renk özel renk seçici',
   'Signed in from another tab. Your workout came along, keep going here.': 'Başka bir sekmede giriş yapıldı. Antrenmanın da geldi, buradan devam et.',
+  'Apple Health': 'Apple Health',
+  'Manual': 'Manuel',
+  'Apple Health is still checking for a weight. Enter your weight to start.': 'Apple Health hâlâ bir ağırlık arıyor. Başlamak için ağırlığını gir.',
+  'Apple Health is unavailable on this device. Enter your weight to start.': 'Apple Health bu cihazda kullanılamıyor. Başlamak için ağırlığını gir.',
+  'Apple Health has no readable weight. You can check Health access in Settings or enter your weight here.': 'Apple Health\'te okunabilir bir ağırlık yok. Ayarlar\'dan Health erişimini kontrol edebilir veya ağırlığını buraya girebilirsin.',
+  'Apple Health could not load your weight. Enter your weight to start.': 'Apple Health ağırlığını yükleyemedi. Başlamak için ağırlığını gir.',
 }
